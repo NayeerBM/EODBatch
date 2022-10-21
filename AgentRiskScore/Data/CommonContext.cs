@@ -1,5 +1,4 @@
-﻿using AgentRiskScore.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +14,5 @@ namespace AgentRiskScore.Data
         {
             optionsBuilder.UseSqlServer(GlobalVariables.ConnectionString["DefaultConnection"]);
         }
-        public DbSet<WL_BATCHLOG> WL_BATCHLOG { get; set; }
     }
 }

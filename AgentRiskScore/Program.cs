@@ -11,8 +11,11 @@ namespace AgentRiskScore
 {
     public class Program
     {
+        //Use following command to update DB modesl directly from DB
+        //Scaffold-DbContext "Server=192.168.2.70,50679\\MSSQLSERVER19; initial catalog=ISEM_PANDA_STG;User ID=pandaDev; pwd=sa123qwe!@#; Integrated Security=false;MultipleActiveResultSets=true;" Microsoft.EntityFrameworkCore.SqlServer -Tables RISK_CALC,RISK_CALC_SOURCE -OutputDir Models -ContextDir Data -Context CommonContext -Force
+        //GlobalVariables.ConnectionString["DefaultConnection"]
+
         private static readonly Logger logger = LogManager.GetLogger("Logger");
-        private static readonly Logger consoleLogger = LogManager.GetLogger("ConsoleLogger");
         static void Main(string[] args)
         {
             //DEPENDENCY INJECTION HERE

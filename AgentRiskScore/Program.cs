@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
 using System.Configuration;
-
+using Windows.ApplicationModel.Store.Preview.InstallControl;
 
 namespace AgentRiskScore
 {
@@ -39,11 +39,18 @@ namespace AgentRiskScore
         /// <exception cref="ArgumentException"></exception>
         static void Run(string[] args)
         {
+            /* Sample arguments : RA005 12
+             * Steps:
+             * 1. Check if whether enough arguments have been passed or not
+             * 2. Cast JobId and StepId to variables
+             * 3. Cast Risk Assessment Id
+             * 
+            */
+           //---------------------------------------------------------------------------------------------------------------------------------------------------------------
             /*
                 int overallSum=0;
                 var riskid= get risk assessment id
                 var calcType= get all the calculation steps
-                var cifIds= get all CIF_ID from CUSTOMER table
                 forEach type in calcType{
                     switch (type.Calculation_Type){
                         case 1:
@@ -65,11 +72,11 @@ namespace AgentRiskScore
                 throw new ArgumentException("Not enough arguments have been provided to program");
             foreach (var arg in args)
             {
-                Console.WriteLine(arg);
+                logger.Info(arg);
             }
 
             //Get JobId and StepId
-            int JobId= int.Parse(args[0]);
+            string JobId= args[0];
             int StepId= int.Parse(args[1]);
             logger.Debug($"JobId:{JobId}, StepId:{StepId}");
 
@@ -77,6 +84,7 @@ namespace AgentRiskScore
             int riskAssessmentId = StepId;
             logger.Debug($"riskAssessmentId:{riskAssessmentId}");
 
+            //Get All Calculations for Risk Assessment ID
             
         }
     }

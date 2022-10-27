@@ -8,8 +8,9 @@ namespace AgentRiskScore.Classes
 {
     public class MaxRisk
     {
-        public static void GetMaxRisk()
+        public static void GetMaxRisk(string assessmentId, short RiskCalcId)
         {
+            throw new NotImplementedException();
             /*
                 public static int GetMaxRisk(){
                     0. Initialize empty key-value pair object

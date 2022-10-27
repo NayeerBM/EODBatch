@@ -8,8 +8,9 @@ namespace AgentRiskScore.Classes
 {
     public class AddScores
     {
-        public static void CalcScore()
+        public static void CalcScore(string assessmentId, short RiskCalcId)
         {
+            throw new NotImplementedException();
             /*
                 public static int AddScores(){
                     0. Initialize empty key-value pair object

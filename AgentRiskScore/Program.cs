@@ -1,18 +1,19 @@
 ﻿using AgentRiskScore.Data;
+using AgentRiskScore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
-using System.Configuration;
-using Windows.ApplicationModel.Store.Preview.InstallControl;
+using Newtonsoft.Json;
+using AgentRiskScore.Classes;
 
 namespace AgentRiskScore
 {
     public class Program
     {
         //Use following command to update DB modesl directly from DB
-        //Scaffold-DbContext "Server=192.168.2.70,50679\\MSSQLSERVER19; initial catalog=ISEM_PANDA_STG;User ID=pandaDev; pwd=sa123qwe!@#; Integrated Security=false;MultipleActiveResultSets=true;" Microsoft.EntityFrameworkCore.SqlServer -Tables RISK_CALC,RISK_CALC_SOURCE -OutputDir Models -ContextDir Data -Context CommonContext -Force
+        //Scaffold-DbContext "Server=192.168.2.70,50679\\MSSQLSERVER19; initial catalog=ISEM_PANDA_STG;User ID=pandaDev; pwd=sa123qwe!@#; Integrated Security=false;MultipleActiveResultSets=true;" Microsoft.EntityFrameworkCore.SqlServer -Tables RISK_CALC,RISK_CALC_SOURCE,CUSTOMER,ACCOUNT -OutputDir Models -ContextDir Data -Context CommonContext -Force
         //GlobalVariables.ConnectionString["DefaultConnection"]
 
         private static readonly Logger logger = LogManager.GetLogger("Logger");
@@ -42,14 +43,14 @@ namespace AgentRiskScore
         /// <exception cref="ArgumentException"></exception>
         static void Run(string[] args)
         {
-            /* Sample arguments : RA005 12
+            /* Sample arguments : 12 RA005 
              * Steps:
              * 1. Check if whether enough arguments have been passed or not
              * 2. Cast JobId and StepId to variables
              * 3. Cast Risk Assessment Id
              * 
             */
-           //---------------------------------------------------------------------------------------------------------------------------------------------------------------
+            //---------------------------------------------------------------------------------------------------------------------------------------------------------------
             /*
                 int overallSum=0;
                 var riskid= get risk assessment id
@@ -80,15 +81,41 @@ namespace AgentRiskScore
 
             //Get JobId and StepId
             string JobId= args[0];
-            int StepId= int.Parse(args[1]);
+            string StepId= args[1];
             logger.Debug($"JobId:{JobId}, StepId:{StepId}");
 
             //Risk assessment Id is used as the Step Id, therefore it's taken directly from the Step Id
-            int riskAssessmentId = StepId;
+            string riskAssessmentId = StepId;
             logger.Debug($"riskAssessmentId:{riskAssessmentId}");
 
             //Get All Calculations for Risk Assessment ID
-            
+            List<RiskCalc> riskCalc;
+            using (var context = new CommonContext())
+            { riskCalc = context.RiskCalcs.Where(r => r.AssessmentId == riskAssessmentId).ToList(); }
+            logger.Debug($"riskCalc : {JsonConvert.SerializeObject(riskCalc)}");
+
+            foreach (var row in riskCalc)
+            {
+                logger.Debug($"RiskCalcType : {row.RiskCalcType}");
+                switch (row.RiskCalcType)
+                {
+                    case 1:
+                        logger.Trace($"Started method TotalSumRiskFactor.CalcTotalRisk");
+                        TotalSumRiskFactor.CalcTotalRisk(riskAssessmentId, row.RiskCalcId);
+                        logger.Trace($"Ended method TotalSumRiskFactor.CalcTotalRisk");
+                        break;
+                    case 2:
+                        logger.Trace($"Started method MaxRisk.GetMaxRisk");
+                        MaxRisk.GetMaxRisk(riskAssessmentId, row.RiskCalcId);
+                        logger.Trace($"Ended method MaxRisk.GetMaxRisk");
+                        break;
+                    case 3:
+                        logger.Trace($"Started method AddScores.CalcScore");
+                        AddScores.CalcScore(riskAssessmentId, row.RiskCalcId);
+                        logger.Trace($"Ended method AddScores.CalcScore");
+                        break;
+                }
+            }
         }
     }
 }

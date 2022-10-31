@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using Newtonsoft.Json;
 using AgentRiskScore.Classes;
+using AgentRiskScore.Exceptions;
 
 namespace AgentRiskScore
 {
@@ -23,7 +24,6 @@ namespace AgentRiskScore
             //DO NOT WRITE ANY CODE HERE OTHER THAN FOR DEPENDENCY INJECTION
             try
             {
-                /*consoleLogger.Info("test");*/
                 logger.Trace("Application has started");
                 Run(args);
                 logger.Trace("Application has stopped");
@@ -43,33 +43,13 @@ namespace AgentRiskScore
         /// <exception cref="ArgumentException"></exception>
         static void Run(string[] args)
         {
-            /* Sample arguments : 12 RA005 
-             * Steps:
-             * 1. Check if whether enough arguments have been passed or not
-             * 2. Cast JobId and StepId to variables
-             * 3. Cast Risk Assessment Id
-             * 
+            /* Main Loop:
+             * 1. Check if enough arguments are passed to the program
+             * 2. Validate the arguments with data to check whether they exist or not and whether the status is set to "active" or not
+             * 3. Get all the Calculations for Risk Assessment Id
+             * 4. Loop over each RISK_CALC object
+             * 5. Check the RISK_CALC_TYPE and execute the appropriate method
             */
-            //---------------------------------------------------------------------------------------------------------------------------------------------------------------
-            /*
-                int overallSum=0;
-                var riskid= get risk assessment id
-                var calcType= get all the calculation steps
-                forEach type in calcType{
-                    switch (type.Calculation_Type){
-                        case 1:
-                        NormalCalculation()
-        
-                        case 2:
-                        GetMaxRisk()
-
-                        case 3:
-                        AddScores()
-                    }
-                }
-                context.useRawSQLQuery("SUM(all)")//Sum all 3 columns, check the risk level from C_C_DTL 
-                table and update Final_Score and Final_Risk_Level
-             */
 
             //Checking whether enough arguments have been passed to the program or not
             if (args.Length < 2)
@@ -78,20 +58,42 @@ namespace AgentRiskScore
             {
                 logger.Info(arg);
             }
-
+            
             //Get JobId and StepId
             string JobId= args[0];
             string StepId= args[1];
             logger.Debug($"JobId:{JobId}, StepId:{StepId}");
 
+            //Check if Job Id and Job Step Id exists or not
+            using (var context = new CommonContext())
+            {
+                bool jobIdExists = context.ConfigJobs.Where(r => r.JobId == JobId).Any();
+                bool jobStepIdExists = context.ConfigJobSteps.Where(r => r.JobId == JobId && r.StepId == StepId).Any();
+
+                if (!jobIdExists || !jobStepIdExists)
+                    throw new IdDoesNotExistException("Job Id and/or Job Step Id does not exist. Aborting.");
+            }
+
             //Risk assessment Id is used as the Step Id, therefore it's taken directly from the Step Id
             string riskAssessmentId = StepId;
             logger.Debug($"riskAssessmentId:{riskAssessmentId}");
 
-            //Get All Calculations for Risk Assessment ID
+            
             List<RiskCalc> riskCalc;
             using (var context = new CommonContext())
-            { riskCalc = context.RiskCalcs.Where(r => r.AssessmentId == riskAssessmentId).ToList(); }
+            {
+                //Check if Risk Assessment Id exists or not
+                bool idExists= context.ConfigRiskassessments.Where(r=>r.AssessmentId==riskAssessmentId).Any();
+                if (!idExists)
+                    throw new IdDoesNotExistException("Risk Assessment Id does not exist");
+                //Check if Risk Assessment is set to active or not
+                bool isActive = context.ConfigRiskassessments.Where(r => r.AssessmentId == riskAssessmentId).All(r => r.Status == 1);
+                if (!isActive)
+                    throw new Exception("Risk Assessment is Inactive. Cannot proceed with Risk Calculation");
+
+                //Get All Calculations for Risk Assessment ID
+                riskCalc = context.RiskCalcs.Where(r => r.AssessmentId == riskAssessmentId && r.Status==1).ToList(); 
+            }
             logger.Debug($"riskCalc : {JsonConvert.SerializeObject(riskCalc)}");
 
             foreach (var row in riskCalc)

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,8 +22,9 @@ namespace AgentRiskScore.Classes
                 List<RiskCalcSource> riskCalcSources;
                 string strRiskSourceFields = String.Empty;
                 StringBuilder riskFactorStatement = new StringBuilder();
-                riskCalcSources = context.RiskCalcSources.Where(x => x.AssessmentId == assessmentId && x.RiskCalcId == RiskCalcId).ToList();
+                riskCalcSources =  context.RiskCalcSources.Where(x => x.AssessmentId == assessmentId && x.RiskCalcId == RiskCalcId).ToList();
                 var lastItem = riskCalcSources.Last();
+
                 foreach (var riskCalcSource in riskCalcSources)
                 {
                     riskScoreFields.Add(riskCalcSource.SourceField);
@@ -38,14 +40,25 @@ namespace AgentRiskScore.Classes
                 }
                 strRiskSourceFields = string.Join(" + ", riskScoreFields);
                 riskFactorStatement.Insert(0, $"INSERT INTO RISK_TEMP\r\nSELECT NO_MASTER, NO_CIF, SUM({strRiskSourceFields}), 0 as SUM_RISK_CALC_TYPE2, 0 as SUM_RISK_CALC_TYPE3, 0 as FINAL_SCORE FROM(\r\nSELECT\r\nNO_MASTER,\r\nNO_CIF,\r\n");
-                riskFactorStatement.AppendLine("FROM CUSTOMER) TEMP\r\nGROUP BY NO_MASTER, NO_CIF");
+                riskFactorStatement.AppendLine("FROM CUSTOMER) TEMP \r\nGROUP BY NO_MASTER, NO_CIF");
                 logger.Info(riskFactorStatement.ToString());
                 Console.WriteLine("-------------------Start of Query-------------------\n");
                 Console.WriteLine(riskFactorStatement.ToString());
                 Console.WriteLine("-------------------End of Query-------------------\n");
-
-                var executeQuery = context.Database.ExecuteSqlRaw(riskFactorStatement.ToString());
-                logger.Debug($"Number of rows affected: {executeQuery}");
+                var watch = new System.Diagnostics.Stopwatch();
+                try
+                {
+                    watch.Start();
+                    var executeQuery = context.Database.ExecuteSqlRaw(riskFactorStatement.ToString());
+                    logger.Debug($"Number of rows affected: {executeQuery}");
+                    watch.Stop();
+                    Console.WriteLine(watch.ElapsedMilliseconds);
+                }
+                catch(DbException db)
+                {
+                    logger.Error(db, "Error executing query inside method: CalcTotalRisk");
+                    throw new Exception("Failed to execute SQL Query");
+                }
             }
         }
     }

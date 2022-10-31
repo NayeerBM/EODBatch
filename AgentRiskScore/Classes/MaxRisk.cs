@@ -1,8 +1,11 @@
-﻿using System;
+﻿using AgentRiskScore.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace AgentRiskScore.Classes
 {
@@ -11,23 +14,22 @@ namespace AgentRiskScore.Classes
         public static void GetMaxRisk(string assessmentId, short RiskCalcId)
         {
             throw new NotImplementedException();
-            /*
-                public static int GetMaxRisk(){
-                    0. Initialize empty key-value pair object
-                    1. Based on Assessment_ID && Risk_Calc_Id, get (PARAM_CODE,SOURCE_TABLE,SOURCE_FIELD,)
-                    2. Iterate over each row of data:
-                        i. for each row in the SOURCE_TABLE //Account
-                            - var RiskCode= context.SOURCE_TABLE.Select(SOURCE_FIELD)//ValueField01
-                            - var RiskScore= context.RawSQLQuery("SELECT RISKSCORE FROM C_C_DTL WHERE CODE_PRIME
-                              = {ParamCode} && CODE_SUB={RiskCode}");
-                            -Replace with SQLQuery
-                        ii. forEach row in key-value object
-                            - var cif=get key
-                            - var maxValue= value.Max()
-                            -Update into SUM_RISK_CALC_TYPE2 based on CIF NO
-            
-                }
-             */
+            /*UPDATE RISK_TEMP
+            SET SUM_RISK_CALC_TYPE2 = MAX_VALUE
+            FROM RISK_TEMP as TEMP INNER JOIN(
+                        SELECT no_master,
+                       no_cif,
+                       Max(data_valuei1) AS MAX_VALUE
+                       FROM   account A
+
+                       LEFT JOIN config_codes_dtl B
+
+                              ON B.code_prime = 1607
+
+                                 AND A.data_value03 = B.code_sub
+
+                GROUP BY no_master, no_cif
+            ) TEMP_TABLE on TEMP.NO_CIF = TEMP_TABLE.NO_CIF and TEMP.NO_MASTER = TEMP_TABLE.NO_MASTER*/
         }
     }
 }

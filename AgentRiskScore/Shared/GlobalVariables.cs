@@ -9,6 +9,7 @@ namespace AgentRiskScore.Shared
 {
     public class GlobalVariables
     {
-        public static IConfigurationSection ConnectionString { get; } = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("ConnectionStrings");
+        public static string ConnectionString { get; } = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("ConnectionStrings")["DefaultConnection"];
+
     }
 }

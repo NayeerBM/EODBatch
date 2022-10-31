@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using AgentRiskScore.Models;
-using AgentRiskScore.CustomModels;
-
 namespace AgentRiskScore.Data
 {
     public partial class CommonContext : DbContext

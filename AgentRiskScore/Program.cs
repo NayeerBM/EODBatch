@@ -8,6 +8,7 @@ using NLog;
 using Newtonsoft.Json;
 using AgentRiskScore.Classes;
 using AgentRiskScore.Exceptions;
+using System.Data.Common;
 
 namespace AgentRiskScore
 {
@@ -64,35 +65,43 @@ namespace AgentRiskScore
             string StepId= args[1];
             logger.Debug($"JobId:{JobId}, StepId:{StepId}");
 
+            //Check whether able to connect to DB or not
+            if(!new CommonContext().Database.CanConnect())
+            {
+                throw new DatabaseException("Cannot connect to Database. Problem with connection string");
+            }
+
             //Check if Job Id and Job Step Id exists or not
             using (var context = new CommonContext())
             {
-                bool jobIdExists = context.ConfigJobs.Where(r => r.JobId == JobId).Any();
-                bool jobStepIdExists = context.ConfigJobSteps.Where(r => r.JobId == JobId && r.StepId == StepId).Any();
+                bool jobIdExists = context.ConfigJobs.Any(r => r.JobId == JobId);
+                bool jobStepIdExists = context.ConfigJobSteps.Any(r => r.JobId == JobId && r.StepId == StepId);
 
-                if (!jobIdExists || !jobStepIdExists)
-                    throw new IdDoesNotExistException("Job Id and/or Job Step Id does not exist. Aborting.");
+                //UNCOMMENT
+                /*if (!jobIdExists || !jobStepIdExists)
+                    throw new IdDoesNotExistException("Job Id and/or Job Step Id does not exist. Aborting.");*/
             }
 
             //Risk assessment Id is used as the Step Id, therefore it's taken directly from the Step Id
             string riskAssessmentId = StepId;
             logger.Debug($"riskAssessmentId:{riskAssessmentId}");
 
-            
+
             List<RiskCalc> riskCalc;
             using (var context = new CommonContext())
             {
+                //UNCOMMENT
                 //Check if Risk Assessment Id exists or not
-                bool idExists= context.ConfigRiskassessments.Where(r=>r.AssessmentId==riskAssessmentId).Any();
+                /*bool idExists = context.ConfigRiskassessments.Where(r => r.AssessmentId == riskAssessmentId).Any();
                 if (!idExists)
                     throw new IdDoesNotExistException("Risk Assessment Id does not exist");
                 //Check if Risk Assessment is set to active or not
                 bool isActive = context.ConfigRiskassessments.Where(r => r.AssessmentId == riskAssessmentId).All(r => r.Status == 1);
                 if (!isActive)
-                    throw new Exception("Risk Assessment is Inactive. Cannot proceed with Risk Calculation");
+                    throw new Exception("Risk Assessment is Inactive. Cannot proceed with Risk Calculation");*/
 
                 //Get All Calculations for Risk Assessment ID
-                riskCalc = context.RiskCalcs.Where(r => r.AssessmentId == riskAssessmentId && r.Status==1).ToList(); 
+                riskCalc = context.RiskCalcs.Where(r => r.AssessmentId == riskAssessmentId && r.Status == 1).ToList();
             }
             logger.Debug($"riskCalc : {JsonConvert.SerializeObject(riskCalc)}");
 
